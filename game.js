@@ -1507,6 +1507,10 @@ class App {
 
     // ===== BATTLESHIP =====
     startBattleship() {
+        if (this.bsCountdownInterval) {
+            clearInterval(this.bsCountdownInterval);
+            this.bsCountdownInterval = null;
+        }
         this.bsEngine = new BattleshipEngine();
         this.bsAI = new BattleshipAI(this.difficulty);
         this.bsAI.reset();
@@ -1830,7 +1834,11 @@ class App {
             this.countdownNumber.textContent = count;
         }
         
-        const interval = setInterval(() => {
+        if (this.bsCountdownInterval) {
+            clearInterval(this.bsCountdownInterval);
+        }
+        
+        this.bsCountdownInterval = setInterval(() => {
             count--;
             if (count > 0) {
                 if (this.countdownNumber) {
@@ -1840,14 +1848,26 @@ class App {
                 if (this.countdownNumber) {
                     this.countdownNumber.textContent = this.lang === 'vi' ? 'CHIẾN!' : 'FIGHT!';
                 }
+                if (!this.isHost) {
+                    // Guest timer can stop at "CHIẾN!" / "FIGHT!" and wait for the host's sync trigger
+                    clearInterval(this.bsCountdownInterval);
+                    this.bsCountdownInterval = null;
+                }
             } else {
-                clearInterval(interval);
+                // Only Host executes this branch to sync start the battle
+                clearInterval(this.bsCountdownInterval);
+                this.bsCountdownInterval = null;
                 
                 if (this.onlineCountdownOverlay) {
                     this.onlineCountdownOverlay.style.display = 'none';
                 }
                 
-                this._bsStartOnlineBattle();
+                if (this.isHost) {
+                    this.conn.send({
+                        type: 'bs-init-battle'
+                    });
+                    this._bsStartOnlineBattle();
+                }
             }
         }, 1000);
     }
@@ -2471,6 +2491,17 @@ class App {
                 } else {
                     this.bsGameStatus.textContent = this.lang === 'vi' ? 'Đối thủ đã sẵn sàng! Đang chờ bạn đặt tàu...' : 'Opponent is ready! Waiting for you...';
                 }
+                break;
+                
+            case 'bs-init-battle':
+                if (this.bsCountdownInterval) {
+                    clearInterval(this.bsCountdownInterval);
+                    this.bsCountdownInterval = null;
+                }
+                if (this.onlineCountdownOverlay) {
+                    this.onlineCountdownOverlay.style.display = 'none';
+                }
+                this._bsStartOnlineBattle();
                 break;
                 
             case 'bs-shot':
