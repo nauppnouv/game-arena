@@ -118,7 +118,13 @@ const TRANSLATIONS = {
         "bs-p2-turn-desc": "Hãy chuyển thiết bị cho Người chơi 2.",
         "bs-p1-turn-title": "Lượt của Người chơi 1",
         "bs-p1-turn-desc": "Hãy chuyển thiết bị cho Người chơi 1.",
-        "copied": "Đã copy link! 📋"
+        "copied": "Đã copy link! 📋",
+        "bs-ready-btn-ready": "SẴN SÀNG",
+        "bs-ready-btn-waiting": "ĐÃ SẴN SÀNG",
+        "bs-place-status-host-waiting": "Đang đợi đối thủ sẵn sàng...",
+        "bs-place-status-guest-waiting": "Đang đợi người tạo phòng bắt đầu...",
+        "bs-place-status-both-ready": "Cả hai đã sẵn sàng! Nhấn bắt đầu để chiến đấu.",
+        "bs-place-status-opp-ready": "Đối thủ đã sẵn sàng! Hãy đặt hết tàu của bạn."
     },
     en: {
         "page-title": "Game Arena | Caro, Tic-Tac-Toe & Battleship",
@@ -233,7 +239,13 @@ const TRANSLATIONS = {
         "bs-p2-turn-desc": "Please hand the device to Player 2.",
         "bs-p1-turn-title": "Player 1's Turn",
         "bs-p1-turn-desc": "Please hand the device to Player 1.",
-        "copied": "Link copied! 📋"
+        "copied": "Link copied! 📋",
+        "bs-ready-btn-ready": "READY",
+        "bs-ready-btn-waiting": "READY",
+        "bs-place-status-host-waiting": "Waiting for opponent to be ready...",
+        "bs-place-status-guest-waiting": "Waiting for host to start...",
+        "bs-place-status-both-ready": "Both players ready! Press start to battle.",
+        "bs-place-status-opp-ready": "Opponent is ready! Place all your ships."
     }
 };
 
@@ -909,6 +921,7 @@ class App {
         this.onlineGameStarted = false;
         this.mySymbol = null;
         this.opponentBsReady = false;
+        this.meBsReady = false;
         this.opponentBsBoard = null;
         this.opponentBsShips = null;
         this.rematchRequested = false;
@@ -1136,13 +1149,7 @@ class App {
         if (this.bsEngine) {
             this._bsUpdateFleetStatus();
             if (this.bsEngine.phase === 'placement') {
-                this.bsStartBattle.querySelector('.start-btn-text').textContent = this.bsEngine.playerShips.length < SHIP_TYPES.length 
-                    ? this._getT('bs-start-battle') 
-                    : (this.playerMode === 2 && this.bsPlacingPlayer === 1 ? this._getT('bs-ready-btn-p2') : this._getT('bs-ready-btn-start'));
-                
-                this.bsGameStatus.textContent = this.bsPlacingPlayer === 1 
-                    ? (this.playerMode === 2 ? this._getT('bs-place-status-p1') : this._getT('bs-place-status'))
-                    : this._getT('bs-place-status-p2');
+                this._bsUpdatePlacementStatusAndButtons();
             } else if (this.bsEngine.phase === 'battle') {
                 if (this.playerMode === 3) {
                     this.bsGameStatus.textContent = this.bsEngine.currentTurn === 'player' ? this._getT('bs-battle-turn-you') : this._getT('bs-battle-turn-opp');
@@ -1571,23 +1578,16 @@ class App {
         this.bsBattlePhase.style.display = 'none';
         
         this.bsPlacingPlayer = 1;
-        
-        if (this.playerMode === 3) {
-            this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
-            this.bsGameStatus.textContent = this._getT('bs-place-status');
-        } else if (this.playerMode === 2) {
-            this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-p2');
-            this.bsGameStatus.textContent = this._getT('bs-place-status-p1');
-        } else {
-            this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
-            this.bsGameStatus.textContent = this._getT('bs-place-status');
-        }
+        this.opponentBsReady = false;
+        this.meBsReady = false;
+        this.opponentBsBoard = null;
+        this.opponentBsShips = null;
         
         this.bsGameStatus.className = 'game-status';
 
         this._bsBuildShipList();
         this._bsBuildPlacementBoard();
-        this.bsStartBattle.disabled = true;
+        this._bsUpdatePlacementStatusAndButtons();
     }
 
     _bsBuildShipList() {
@@ -1664,6 +1664,7 @@ class App {
     }
 
     _bsPlaceShipAt(row, col) {
+        if (this.playerMode === 3 && this.meBsReady) return;
         const ship = SHIP_TYPES[this.bsCurrentShipIdx];
         const activeBoard = this.bsPlacingPlayer === 1 ? this.bsEngine.playerBoard : this.bsEngine.opponentBoard;
         const activeShips = this.bsPlacingPlayer === 1 ? this.bsEngine.playerShips : this.bsEngine.opponentShips;
@@ -1688,16 +1689,7 @@ class App {
             }
         }
 
-        this.bsStartBattle.disabled = activeShips.length < SHIP_TYPES.length;
-        if (!this.bsStartBattle.disabled) {
-            if (this.playerMode === 2 && this.bsPlacingPlayer === 1) {
-                this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-p2');
-                this.bsGameStatus.textContent = this._getT('bs-place-ready-p1');
-            } else {
-                this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
-                this.bsGameStatus.textContent = this._getT('bs-place-ready-all');
-            }
-        }
+        this._bsUpdatePlacementStatusAndButtons();
     }
 
     _bsRefreshPlacementBoard() {
@@ -1710,6 +1702,7 @@ class App {
     }
 
     _bsRandomPlace() {
+        if (this.playerMode === 3 && this.meBsReady) return;
         const activeBoard = this.bsPlacingPlayer === 1 ? this.bsEngine.playerBoard : this.bsEngine.opponentBoard;
         const activeShips = this.bsPlacingPlayer === 1 ? this.bsEngine.playerShips : this.bsEngine.opponentShips;
         
@@ -1721,18 +1714,11 @@ class App {
             i.classList.remove('selected'); 
         });
         
-        this.bsStartBattle.disabled = false;
-        
-        if (this.playerMode === 2 && this.bsPlacingPlayer === 1) {
-            this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-p2');
-            this.bsGameStatus.textContent = this._getT('bs-place-ready-p1');
-        } else {
-            this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
-            this.bsGameStatus.textContent = this._getT('bs-place-ready-all');
-        }
+        this._bsUpdatePlacementStatusAndButtons();
     }
 
     _bsClearPlace() {
+        if (this.playerMode === 3 && this.meBsReady) return;
         const activeBoard = this.bsPlacingPlayer === 1 ? this.bsEngine.playerBoard : this.bsEngine.opponentBoard;
         const activeShips = this.bsPlacingPlayer === 1 ? this.bsEngine.playerShips : this.bsEngine.opponentShips;
         
@@ -1745,10 +1731,7 @@ class App {
             else i.classList.remove('selected'); 
         });
         this.bsCurrentShipIdx = 0;
-        this.bsStartBattle.disabled = true;
-        this.bsGameStatus.textContent = this.bsPlacingPlayer === 1 
-            ? (this.playerMode === 2 ? this._getT('bs-place-status-p1') : this._getT('bs-place-status'))
-            : this._getT('bs-place-status-p2');
+        this._bsUpdatePlacementStatusAndButtons();
     }
 
     _showSwitchOverlay(title, message, onReady) {
@@ -1766,16 +1749,22 @@ class App {
 
     _bsStartBattle() {
         if (this.playerMode === 3) {
-            this.conn.send({
-                type: 'bs-ready',
-                board: this.bsEngine.playerBoard,
-                ships: this.bsEngine.playerShips
-            });
-            this.bsStartBattle.disabled = true;
-            this.bsGameStatus.textContent = this.lang === 'vi' ? 'Đang đợi đối thủ đặt tàu...' : 'Waiting for opponent to place ships...';
-            
-            if (this.opponentBsReady) {
+            if (this.isHost) {
+                this.meBsReady = true;
+                this.conn.send({
+                    type: 'bs-countdown-start',
+                    board: this.bsEngine.playerBoard,
+                    ships: this.bsEngine.playerShips
+                });
                 this._bsStartOnlineCountdown();
+            } else {
+                this.meBsReady = true;
+                this.conn.send({
+                    type: 'bs-ready',
+                    board: this.bsEngine.playerBoard,
+                    ships: this.bsEngine.playerShips
+                });
+                this._bsUpdatePlacementStatusAndButtons();
             }
         } else if (this.playerMode === 2 && this.bsPlacingPlayer === 1) {
             this._showSwitchOverlay(this._getT('bs-p2-place-title'), this._getT('bs-p2-place-desc'), () => {
@@ -1796,6 +1785,74 @@ class App {
             } else {
                 this.bsEngine.randomPlacement(this.bsEngine.opponentBoard, this.bsEngine.opponentShips);
                 this._bsStartBattleActual();
+            }
+        }
+    }
+
+    _bsUpdatePlacementStatusAndButtons() {
+        if (!this.bsEngine || this.bsEngine.phase !== 'placement') return;
+
+        const activeShips = (this.playerMode === 2 && this.bsPlacingPlayer === 2) 
+            ? this.bsEngine.opponentShips 
+            : this.bsEngine.playerShips;
+        const isFullyPlaced = activeShips.length === SHIP_TYPES.length;
+
+        if (this.playerMode === 3) {
+            if (this.isHost) {
+                this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
+                const readyToStart = isFullyPlaced && this.opponentBsReady;
+                this.bsStartBattle.disabled = !readyToStart;
+
+                if (isFullyPlaced) {
+                    if (this.opponentBsReady) {
+                        this.bsGameStatus.textContent = this._getT('bs-place-status-both-ready');
+                    } else {
+                        this.bsGameStatus.textContent = this._getT('bs-place-status-host-waiting');
+                    }
+                } else {
+                    if (this.opponentBsReady) {
+                        this.bsGameStatus.textContent = this._getT('bs-place-status-opp-ready');
+                    } else {
+                        this.bsGameStatus.textContent = this._getT('bs-place-status');
+                    }
+                }
+            } else {
+                if (this.meBsReady) {
+                    this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-waiting');
+                    this.bsStartBattle.disabled = true;
+                    this.bsGameStatus.textContent = this._getT('bs-place-status-guest-waiting');
+                } else {
+                    this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-ready');
+                    this.bsStartBattle.disabled = !isFullyPlaced;
+                    
+                    if (isFullyPlaced) {
+                        this.bsGameStatus.textContent = this.lang === 'vi' ? 'Đã xếp xong! Nhấn Sẵn Sàng.' : 'Placement done! Click Ready.';
+                    } else {
+                        this.bsGameStatus.textContent = this._getT('bs-place-status');
+                    }
+                }
+            }
+        } else {
+            this.bsStartBattle.disabled = !isFullyPlaced;
+            if (isFullyPlaced) {
+                if (this.playerMode === 2 && this.bsPlacingPlayer === 1) {
+                    this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-p2');
+                    this.bsGameStatus.textContent = this._getT('bs-place-ready-p1');
+                } else {
+                    this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
+                    this.bsGameStatus.textContent = this._getT('bs-place-ready-all');
+                }
+            } else {
+                if (this.playerMode === 2 && this.bsPlacingPlayer === 1) {
+                    this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-p2');
+                    this.bsGameStatus.textContent = this._getT('bs-place-status-p1');
+                } else if (this.playerMode === 2 && this.bsPlacingPlayer === 2) {
+                    this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
+                    this.bsGameStatus.textContent = this._getT('bs-place-status-p2');
+                } else {
+                    this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
+                    this.bsGameStatus.textContent = this._getT('bs-place-status');
+                }
             }
         }
     }
@@ -2366,6 +2423,7 @@ class App {
         this.onlineGameStarted = false;
         this.isHost = false;
         this.opponentBsReady = false;
+        this.meBsReady = false;
         this.opponentBsBoard = null;
         this.opponentBsShips = null;
         this.rematchRequested = false;
@@ -2456,6 +2514,7 @@ class App {
         this.rematchRequested = false;
         this.rematchMe = false;
         this.opponentBsReady = false;
+        this.meBsReady = false;
         this.opponentBsBoard = null;
         this.opponentBsShips = null;
         
@@ -2510,12 +2569,14 @@ class App {
                 this.opponentBsReady = true;
                 this.opponentBsBoard = data.board;
                 this.opponentBsShips = data.ships;
-                
-                if (this.bsEngine && this.bsEngine.playerShips.length === SHIP_TYPES.length) {
-                    this._bsStartOnlineCountdown();
-                } else {
-                    this.bsGameStatus.textContent = this.lang === 'vi' ? 'Đối thủ đã sẵn sàng! Đang chờ bạn đặt tàu...' : 'Opponent is ready! Waiting for you...';
-                }
+                this._bsUpdatePlacementStatusAndButtons();
+                break;
+
+            case 'bs-countdown-start':
+                this.opponentBsReady = true;
+                this.opponentBsBoard = data.board;
+                this.opponentBsShips = data.ships;
+                this._bsStartOnlineCountdown();
                 break;
                 
             case 'bs-init-battle':
