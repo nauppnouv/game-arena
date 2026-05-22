@@ -1035,13 +1035,34 @@ class App {
         }));
         
         this.startBtn.addEventListener('click', () => this.startGame());
-        this.backBtn.addEventListener('click', () => this.showMenu());
+        this.backBtn.addEventListener('click', () => {
+            if (this.playerMode === 3) {
+                this.onlineDisconnectAndReturn();
+            } else {
+                this.showMenu();
+            }
+        });
         this.restartBtn.addEventListener('click', () => this.restartGame());
         this.playAgainBtn.addEventListener('click', () => { this.hideGameOver(); this.restartGame(); });
-        this.menuBtn.addEventListener('click', () => { this.hideGameOver(); this.showMenu(); });
+        this.menuBtn.addEventListener('click', () => { 
+            this.hideGameOver(); 
+            if (this.playerMode === 3) {
+                this.onlineDisconnectAndReturn();
+            } else {
+                this.showMenu();
+            }
+        });
         
         // Battleship
-        if (this.bsBackBtn) this.bsBackBtn.addEventListener('click', () => this.showMenu());
+        if (this.bsBackBtn) {
+            this.bsBackBtn.addEventListener('click', () => {
+                if (this.playerMode === 3) {
+                    this.onlineDisconnectAndReturn();
+                } else {
+                    this.showMenu();
+                }
+            });
+        }
         if (this.bsRestartBtn) this.bsRestartBtn.addEventListener('click', () => this.startBattleship());
         if (this.bsRotateBtn) this.bsRotateBtn.addEventListener('click', () => { 
             this.bsHorizontal = !this.bsHorizontal; 
@@ -2304,11 +2325,15 @@ class App {
             this.meReady = false;
             this.opponentReady = false;
             
-            if (this.lobbySetupCard) this.lobbySetupCard.style.display = 'none';
-            if (this.lobbyReadyCard) this.lobbyReadyCard.style.display = 'block';
-            this.lobbyStatus.textContent = this.lang === 'vi' ? 'Cả hai người chơi cần Sẵn Sàng...' : 'Both players must get Ready...';
-            
-            this._updateReadyUI();
+            if (this.mode === 'battleship') {
+                this.onlineStartGameActual();
+            } else {
+                if (this.lobbySetupCard) this.lobbySetupCard.style.display = 'none';
+                if (this.lobbyReadyCard) this.lobbyReadyCard.style.display = 'block';
+                this.lobbyStatus.textContent = this.lang === 'vi' ? 'Cả hai người chơi cần Sẵn Sàng...' : 'Both players must get Ready...';
+                
+                this._updateReadyUI();
+            }
         };
 
         if (this.conn.open) {
