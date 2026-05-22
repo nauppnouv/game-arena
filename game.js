@@ -2085,9 +2085,7 @@ class App {
                 shipEl.classList.toggle('sunk', isSunk);
                 const dots = shipEl.querySelectorAll('.bs-hp-dot');
                 
-                const hits = (this.playerMode === 2) 
-                    ? (isSunk ? st.size : 0) 
-                    : (ship ? ship.hits : 0);
+                const hits = ship ? ship.hits : 0;
                 
                 dots.forEach((dot, idx) => {
                     dot.classList.toggle('hit', idx < hits);
