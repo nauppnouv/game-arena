@@ -660,15 +660,6 @@ class BattleshipEngine {
                     ship.sunk = true;
                     // Mark all cells as sunk
                     for (const cell of ship.cells) shots[cell.row][cell.col] = 'sunk';
-                    // Mark surrounding cells as miss (revealed)
-                    for (const cell of ship.cells) {
-                        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-                            const nr = cell.row + dr, nc = cell.col + dc;
-                            if (nr >= 0 && nr < this.size && nc >= 0 && nc < this.size && shots[nr][nc] === null) {
-                                shots[nr][nc] = 'miss';
-                            }
-                        }
-                    }
                     return 'sunk';
                 }
             }
