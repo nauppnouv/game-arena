@@ -1750,7 +1750,7 @@ class App {
             this.bsGameStatus.textContent = this.lang === 'vi' ? 'Đang đợi đối thủ đặt tàu...' : 'Waiting for opponent to place ships...';
             
             if (this.opponentBsReady) {
-                this._bsStartOnlineBattle();
+                this._bsStartOnlineCountdown();
             }
         } else if (this.playerMode === 2 && this.bsPlacingPlayer === 1) {
             this._showSwitchOverlay(this._getT('bs-p2-place-title'), this._getT('bs-p2-place-desc'), () => {
@@ -1818,6 +1818,38 @@ class App {
         
         this._bsBuildBattleBoards();
         this._bsUpdateFleetStatus();
+    }
+
+    _bsStartOnlineCountdown() {
+        if (this.onlineCountdownOverlay) {
+            this.onlineCountdownOverlay.style.display = 'flex';
+        }
+        
+        let count = 3;
+        if (this.countdownNumber) {
+            this.countdownNumber.textContent = count;
+        }
+        
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                if (this.countdownNumber) {
+                    this.countdownNumber.textContent = count;
+                }
+            } else if (count === 0) {
+                if (this.countdownNumber) {
+                    this.countdownNumber.textContent = this.lang === 'vi' ? 'CHIẾN!' : 'FIGHT!';
+                }
+            } else {
+                clearInterval(interval);
+                
+                if (this.onlineCountdownOverlay) {
+                    this.onlineCountdownOverlay.style.display = 'none';
+                }
+                
+                this._bsStartOnlineBattle();
+            }
+        }, 1000);
     }
 
     _bsBuildBattleBoards() {
@@ -2435,7 +2467,7 @@ class App {
                 this.opponentBsShips = data.ships;
                 
                 if (this.bsEngine && this.bsEngine.playerShips.length === SHIP_TYPES.length) {
-                    this._bsStartOnlineBattle();
+                    this._bsStartOnlineCountdown();
                 } else {
                     this.bsGameStatus.textContent = this.lang === 'vi' ? 'Đối thủ đã sẵn sàng! Đang chờ bạn đặt tàu...' : 'Opponent is ready! Waiting for you...';
                 }
