@@ -2143,9 +2143,6 @@ class App {
         
         const initPeer = (codeAttempt) => {
             this.peer = new Peer('ga-' + codeAttempt, {
-                host: '0.peerjs.com',
-                port: 443,
-                secure: true,
                 debug: 1
             });
             
@@ -2197,9 +2194,6 @@ class App {
         
         const guestId = 'ga-guest-' + Math.floor(Math.random() * 1000000);
         this.peer = new Peer(guestId, {
-            host: '0.peerjs.com',
-            port: 443,
-            secure: true,
             debug: 1
         });
         
@@ -2240,21 +2234,29 @@ class App {
     onlineSetupConnection() {
         if (!this.conn) return;
         
-        this.conn.on('open', () => {
+        const handleOpenConnection = () => {
             this.lobbyStatus.textContent = this.lang === 'vi' ? 'Thiết lập trận hải chiến...' : 'Preparing naval combat...';
             this.onlineGameStarted = true;
             
             if (this.isHost) {
                 setTimeout(() => {
-                    this.conn.send({
-                        type: 'init-game',
-                        mode: this.mode,
-                        difficulty: this.difficulty
-                    });
-                    this.onlineStartGameActual();
+                    if (this.conn && this.conn.open) {
+                        this.conn.send({
+                            type: 'init-game',
+                            mode: this.mode,
+                            difficulty: this.difficulty
+                        });
+                        this.onlineStartGameActual();
+                    }
                 }, 1000);
             }
-        });
+        };
+
+        if (this.conn.open) {
+            handleOpenConnection();
+        } else {
+            this.conn.on('open', handleOpenConnection);
+        }
         
         this.conn.on('data', (data) => {
             this.onlineHandleMessage(data);
