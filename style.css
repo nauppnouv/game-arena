@@ -1755,3 +1755,136 @@ h1, h2, h3, .game-title, .result-text {
         width: 100%;
     }
 }
+
+/* ==============================================
+   ONLINE MULTIPLAYER READY CARD & COUNTDOWN
+   ============================================== */
+.ready-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.players-ready-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.player-ready-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    padding: 1.5rem 1rem;
+    border-radius: var(--radius-md);
+    min-width: 140px;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+}
+
+[data-theme="light"] .player-ready-card {
+    background: rgba(0, 0, 0, 0.01);
+}
+
+.player-ready-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.ready-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all var(--transition-normal);
+}
+
+.ready-badge.not-ready {
+    background: rgba(244, 63, 94, 0.1);
+    color: var(--x-color);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.1);
+}
+
+.ready-badge.ready {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.ready-vs {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--text-muted);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+}
+
+/* Fullscreen Countdown Overlay */
+.countdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 26, 0.9);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    transition: all var(--transition-normal);
+}
+
+[data-theme="light"] .countdown-overlay {
+    background: rgba(240, 242, 248, 0.9);
+}
+
+.countdown-number {
+    font-family: 'Outfit', sans-serif;
+    font-size: 10rem;
+    font-weight: 900;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 50px rgba(99, 102, 241, 0.5);
+    animation: countdownPulse 1s ease-in-out infinite;
+}
+
+@keyframes countdownPulse {
+    0% {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+    15% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    30% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    90% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+    }
+}
+

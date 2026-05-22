@@ -999,6 +999,19 @@ class App {
         this.lobbyErrorMsg = document.getElementById('lobby-error-msg');
         this.lobbyBackBtn = document.getElementById('lobby-back-btn');
         this.langToggleBtn = document.getElementById('lang-toggle');
+
+        // Online Lobby Cards & Ready area
+        this.lobbySetupCard = document.getElementById('lobby-setup-card');
+        this.lobbyReadyCard = document.getElementById('lobby-ready-card');
+        this.btnToggleReady = document.getElementById('btn-toggle-ready');
+        this.readyBadgeMe = document.getElementById('ready-badge-me');
+        this.readyBadgeOpponent = document.getElementById('ready-badge-opponent');
+        this.btnReadyText = document.getElementById('btn-ready-text');
+        this.onlineCountdownOverlay = document.getElementById('online-countdown-overlay');
+        this.countdownNumber = document.getElementById('countdown-number');
+
+        this.meReady = false;
+        this.opponentReady = false;
     }
 
     _bindEvents() {
@@ -1060,6 +1073,7 @@ class App {
         if (this.btnJoinRoom) this.btnJoinRoom.addEventListener('click', () => this.onlineJoinRoom());
         if (this.lobbyBackBtn) this.lobbyBackBtn.addEventListener('click', () => this.onlineDisconnectAndReturn());
         if (this.langToggleBtn) this.langToggleBtn.addEventListener('click', () => this.toggleLang());
+        if (this.btnToggleReady) this.btnToggleReady.addEventListener('click', () => this.onlineToggleReady());
     }
 
     // ===== TRANSLATIONS & LOCALIZATION =====
@@ -2220,14 +2234,13 @@ class App {
         const code = this.displayRoomId.textContent;
         if (!code || code === '------') return;
         
-        const link = `${window.location.origin}${window.location.pathname}?room=${code}`;
-        navigator.clipboard.writeText(link).then(() => {
+        navigator.clipboard.writeText(code).then(() => {
             const originalText = this.btnCopyRoom.textContent;
             this.btnCopyRoom.textContent = '✔️';
             setTimeout(() => { this.btnCopyRoom.textContent = originalText; }, 1500);
-            alert(this.lang === 'vi' ? 'Đã sao chép đường link mời chơi!' : 'Invitation link copied!');
+            alert(this.lang === 'vi' ? 'Đã sao chép mã phòng!' : 'Room code copied!');
         }).catch(err => {
-            console.error('Failed to copy link', err);
+            console.error('Failed to copy code', err);
         });
     }
 
@@ -2235,21 +2248,15 @@ class App {
         if (!this.conn) return;
         
         const handleOpenConnection = () => {
-            this.lobbyStatus.textContent = this.lang === 'vi' ? 'Thiết lập trận hải chiến...' : 'Preparing naval combat...';
             this.onlineGameStarted = true;
+            this.meReady = false;
+            this.opponentReady = false;
             
-            if (this.isHost) {
-                setTimeout(() => {
-                    if (this.conn && this.conn.open) {
-                        this.conn.send({
-                            type: 'init-game',
-                            mode: this.mode,
-                            difficulty: this.difficulty
-                        });
-                        this.onlineStartGameActual();
-                    }
-                }, 1000);
-            }
+            if (this.lobbySetupCard) this.lobbySetupCard.style.display = 'none';
+            if (this.lobbyReadyCard) this.lobbyReadyCard.style.display = 'block';
+            this.lobbyStatus.textContent = this.lang === 'vi' ? 'Cả hai người chơi cần Sẵn Sàng...' : 'Both players must get Ready...';
+            
+            this._updateReadyUI();
         };
 
         if (this.conn.open) {
@@ -2287,6 +2294,13 @@ class App {
         this.rematchRequested = false;
         this.rematchMe = false;
         
+        this.meReady = false;
+        this.opponentReady = false;
+        
+        if (this.btnToggleReady) this.btnToggleReady.disabled = false;
+        if (this.lobbyBackBtn) this.lobbyBackBtn.disabled = false;
+        if (this.onlineCountdownOverlay) this.onlineCountdownOverlay.style.display = 'none';
+        
         if (this.conn) {
             try { this.conn.close(); } catch(e){}
             this.conn = null;
@@ -2312,6 +2326,9 @@ class App {
         this.displayRoomId.textContent = '------';
         this.inputRoomId.value = '';
         this.lobbyStatus.textContent = this.lang === 'vi' ? 'Kết nối mạng hàng hải P2P' : 'Connecting via P2P Naval Network';
+        
+        if (this.lobbySetupCard) this.lobbySetupCard.style.display = 'flex';
+        if (this.lobbyReadyCard) this.lobbyReadyCard.style.display = 'none';
     }
 
     onlineStartGameActual() {
@@ -2389,7 +2406,16 @@ class App {
                 this.modeCards.forEach(card => {
                     card.classList.toggle('selected', card.dataset.mode === this.mode);
                 });
+                if (this.onlineCountdownOverlay) {
+                    this.onlineCountdownOverlay.style.display = 'none';
+                }
                 this.onlineStartGameActual();
+                break;
+                
+            case 'ready-state':
+                this.opponentReady = data.ready;
+                this._updateReadyUI();
+                this._checkBothReady();
                 break;
                 
             case 'move':
@@ -2461,6 +2487,95 @@ class App {
                 this.onlineRestartGameForSymbol(data.firstPlayer);
                 break;
         }
+    }
+
+    onlineToggleReady() {
+        if (!this.conn || !this.onlineGameStarted) return;
+        
+        this.meReady = !this.meReady;
+        this._updateReadyUI();
+        
+        this.conn.send({
+            type: 'ready-state',
+            ready: this.meReady
+        });
+        
+        this._checkBothReady();
+    }
+
+    _updateReadyUI() {
+        if (this.readyBadgeMe) {
+            this.readyBadgeMe.className = this.meReady ? 'ready-badge ready' : 'ready-badge not-ready';
+            this.readyBadgeMe.textContent = this.meReady 
+                ? (this.lang === 'vi' ? 'Đã sẵn sàng' : 'Ready') 
+                : (this.lang === 'vi' ? 'Chưa sẵn sàng' : 'Not ready');
+        }
+        
+        if (this.readyBadgeOpponent) {
+            this.readyBadgeOpponent.className = this.opponentReady ? 'ready-badge ready' : 'ready-badge not-ready';
+            this.readyBadgeOpponent.textContent = this.opponentReady 
+                ? (this.lang === 'vi' ? 'Đã sẵn sàng' : 'Ready') 
+                : (this.lang === 'vi' ? 'Chưa sẵn sàng' : 'Not ready');
+        }
+        
+        if (this.btnReadyText) {
+            this.btnReadyText.textContent = this.meReady 
+                ? (this.lang === 'vi' ? 'Hủy Sẵn Sàng' : 'Cancel Ready') 
+                : (this.lang === 'vi' ? 'Sẵn Sàng' : 'Ready');
+        }
+    }
+
+    _checkBothReady() {
+        if (this.meReady && this.opponentReady) {
+            this._startOnlineCountdown();
+        }
+    }
+
+    _startOnlineCountdown() {
+        if (this.btnToggleReady) this.btnToggleReady.disabled = true;
+        if (this.lobbyBackBtn) this.lobbyBackBtn.disabled = true;
+        
+        if (this.onlineCountdownOverlay) {
+            this.onlineCountdownOverlay.style.display = 'flex';
+        }
+        
+        let count = 3;
+        if (this.countdownNumber) {
+            this.countdownNumber.textContent = count;
+        }
+        
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                if (this.countdownNumber) {
+                    this.countdownNumber.textContent = count;
+                }
+            } else if (count === 0) {
+                if (this.countdownNumber) {
+                    this.countdownNumber.textContent = this.lang === 'vi' ? 'CHIẾN!' : 'FIGHT!';
+                }
+            } else {
+                clearInterval(interval);
+                
+                if (this.onlineCountdownOverlay) {
+                    this.onlineCountdownOverlay.style.display = 'none';
+                }
+                
+                if (this.btnToggleReady) this.btnToggleReady.disabled = false;
+                if (this.lobbyBackBtn) this.lobbyBackBtn.disabled = false;
+                
+                this.onlineLobbyScreen.classList.remove('active');
+                
+                if (this.isHost) {
+                    this.conn.send({
+                        type: 'init-game',
+                        mode: this.mode,
+                        difficulty: this.difficulty
+                    });
+                    this.onlineStartGameActual();
+                }
+            }
+        }, 1000);
     }
 }
 

@@ -565,7 +565,7 @@
                     <div style="width: 70px;"></div> <!-- placeholder to center title -->
                 </div>
                 
-                <div class="lobby-card">
+                <div class="lobby-card" id="lobby-setup-card">
                     <div class="lobby-section">
                         <h3 data-i18n="create-room-title">TẠO PHÒNG MỚI</h3>
                         <p class="lobby-desc" data-i18n="create-room-desc">Tạo phòng và gửi link cho bạn bè để cùng chơi.</p>
@@ -603,8 +603,37 @@
                         <p class="error-msg" id="lobby-error-msg" style="display: none;"></p>
                     </div>
                 </div>
+
+                <div class="lobby-card" id="lobby-ready-card" style="display: none;">
+                    <div class="ready-container">
+                        <h3 data-i18n="match-connected-title">TRẬN ĐẤU ĐÃ KẾT NỐI</h3>
+                        <p class="lobby-desc" id="lobby-ready-desc" data-i18n="match-connected-desc">Hãy chuẩn bị sẵn sàng để bắt đầu!</p>
+                        
+                        <div class="players-ready-status">
+                            <div class="player-ready-card" id="ready-card-me">
+                                <span class="player-ready-name" data-i18n="player-you">Bạn</span>
+                                <span class="ready-badge not-ready" id="ready-badge-me" data-i18n="status-not-ready">Chưa sẵn sàng</span>
+                            </div>
+                            <div class="ready-vs">VS</div>
+                            <div class="player-ready-card" id="ready-card-opponent">
+                                <span class="player-ready-name" data-i18n="player-opponent">Đối thủ</span>
+                                <span class="ready-badge not-ready" id="ready-badge-opponent" data-i18n="status-not-ready">Chưa sẵn sàng</span>
+                            </div>
+                        </div>
+                        
+                        <button class="lobby-btn primary" id="btn-toggle-ready">
+                            <span class="lobby-btn-icon">🎮</span>
+                            <span id="btn-ready-text" data-i18n="btn-ready">Sẵn Sàng</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- Online Countdown Overlay -->
+    <div id="online-countdown-overlay" class="countdown-overlay" style="display: none;">
+        <div class="countdown-number" id="countdown-number">3</div>
     </div>
 
     <!-- AI Thinking Indicator -->
