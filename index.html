@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page-title">Game Arena | Caro, Tic-Tac-Toe & Battleship</title>
+    <meta name="description" content="Play Tic-Tac-Toe, Caro and Battleship with AI or 2 players.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="particles-bg"></div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="theme-toggle" aria-label="Đổi theme">
+        <span class="theme-icon theme-icon-dark">🌙</span>
+        <span class="theme-icon theme-icon-light">☀️</span>
+    </button>
+
+    <!-- Language Toggle -->
+    <button class="lang-toggle" id="lang-toggle" aria-label="Đổi ngôn ngữ">
+        VIE
+    </button>
+
+    <div id="app">
+        <!-- ===== MENU SCREEN ===== -->
+        <div id="menu-screen" class="screen active">
+            <div class="menu-container">
+                <div class="title-section">
+                    <h1 class="game-title">
+                        <span class="title-icon">⬡</span>
+                        GAME
+                        <span class="title-amp">&</span>
+                        ARENA
+                    </h1>
+                    <p class="subtitle" data-i18n="subtitle">Premium Board Game Experience</p>
+                </div>
+
+                <div class="mode-section">
+                    <h2 class="section-label" data-i18n="select-mode">Chọn chế độ chơi</h2>
+                    <div class="mode-cards">
+                        <!-- Classic 3×3 -->
+                        <div class="mode-card selected" data-mode="classic" id="mode-classic">
+                            <div class="mode-icon">
+                                <svg viewBox="0 0 80 80" width="60" height="60">
+                                    <line x1="10" y1="10" x2="35" y2="35" stroke="#f43f5e" stroke-width="4" stroke-linecap="round"/>
+                                    <line x1="35" y1="10" x2="10" y2="35" stroke="#f43f5e" stroke-width="4" stroke-linecap="round"/>
+                                    <circle cx="57" cy="22" r="12" fill="none" stroke="#3b82f6" stroke-width="4"/>
+                                    <line x1="10" y1="55" x2="35" y2="55" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+                                    <line x1="22" y1="43" x2="22" y2="68" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <h3>Classic 3×3</h3>
+                            <p data-i18n="classic-desc">Tic-Tac-Toe cổ điển<br>3 ô liên tiếp để thắng</p>
+                            <div class="mode-badge" data-i18n="classic-badge">Cơ bản</div>
+                        </div>
+
+                        <!-- Caro 100×100 -->
+                        <div class="mode-card" data-mode="caro" id="mode-caro">
+                            <div class="mode-icon">
+                                <svg viewBox="0 0 80 80" width="60" height="60">
+                                    <rect x="5" y="5" width="70" height="70" rx="4" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                                    <line x1="5" y1="19" x2="75" y2="19" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                    <line x1="5" y1="33" x2="75" y2="33" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                    <line x1="5" y1="47" x2="75" y2="47" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                    <line x1="5" y1="61" x2="75" y2="61" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                    <line x1="19" y1="5" x2="19" y2="75" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                    <line x1="33" y1="5" x2="33" y2="75" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                    <line x1="47" y1="5" x2="47" y2="75" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                    <line x1="61" y1="5" x2="61" y2="75" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                    <circle cx="26" cy="26" r="5" fill="#f43f5e"/>
+                                    <circle cx="40" cy="40" r="5" fill="#3b82f6"/>
+                                    <circle cx="54" cy="26" r="5" fill="#f43f5e"/>
+                                    <circle cx="40" cy="54" r="5" fill="#f43f5e"/>
+                                    <circle cx="54" cy="40" r="5" fill="#3b82f6"/>
+                                </svg>
+                            </div>
+                            <h3>Caro 100×100</h3>
+                            <p data-i18n="caro-desc">Bàn cờ khổng lồ<br>5 ô liên tiếp để thắng</p>
+                            <div class="mode-badge epic" data-i18n="caro-badge">Sử thi</div>
+                        </div>
+
+                        <!-- Battleship -->
+                        <div class="mode-card" data-mode="battleship" id="mode-battleship">
+                            <div class="mode-icon">
+                                <svg viewBox="0 0 80 80" width="60" height="60">
+                                    <!-- Water waves -->
+                                    <path d="M5 55 Q15 50 25 55 Q35 60 45 55 Q55 50 65 55 Q75 60 80 55" fill="none" stroke="rgba(59,130,246,0.3)" stroke-width="2"/>
+                                    <path d="M0 62 Q10 57 20 62 Q30 67 40 62 Q50 57 60 62 Q70 67 80 62" fill="none" stroke="rgba(59,130,246,0.2)" stroke-width="1.5"/>
+                                    <!-- Ship hull -->
+                                    <path d="M12 48 L18 52 L62 52 L68 48 L62 44 L18 44 Z" fill="rgba(148,163,184,0.6)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+                                    <!-- Ship deck -->
+                                    <rect x="22" y="38" width="8" height="6" rx="1" fill="rgba(255,255,255,0.15)"/>
+                                    <rect x="34" y="36" width="12" height="8" rx="1.5" fill="rgba(255,255,255,0.15)"/>
+                                    <!-- Mast -->
+                                    <line x1="40" y1="36" x2="40" y2="22" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+                                    <!-- Flag -->
+                                    <polygon points="40,22 52,26 40,30" fill="#f43f5e" opacity="0.7"/>
+                                    <!-- Crosshair / target -->
+                                    <circle cx="58" cy="30" r="8" fill="none" stroke="#f43f5e" stroke-width="1.5" opacity="0.6"/>
+                                    <line x1="58" y1="20" x2="58" y2="40" stroke="#f43f5e" stroke-width="1" opacity="0.4"/>
+                                    <line x1="48" y1="30" x2="68" y2="30" stroke="#f43f5e" stroke-width="1" opacity="0.4"/>
+                                </svg>
+                            </div>
+                            <h3>Battleship</h3>
+                            <p data-i18n="battleship-desc">Hải chiến chiến thuật<br>Tìm và đánh chìm hạm đội</p>
+                            <div class="mode-badge battle" data-i18n="battleship-badge">Chiến thuật</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="options-section">
+                    <div class="option-group">
+                        <h2 class="section-label" data-i18n="players-count">Số người chơi</h2>
+                        <div class="toggle-group" id="player-toggle">
+                            <button class="toggle-btn active" data-players="1" id="btn-1p">
+                                <span class="toggle-icon">🤖</span>
+                                <span data-i18n="btn-1p">Chơi với Máy</span>
+                            </button>
+                            <button class="toggle-btn" data-players="2" id="btn-2p">
+                                <span class="toggle-icon">👥</span>
+                                <span data-i18n="btn-2p">2 Người chơi</span>
+                            </button>
+                            <button class="toggle-btn" data-players="3" id="btn-online">
+                                <span class="toggle-icon">🌐</span>
+                                <span data-i18n="btn-online">Chơi Online</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="option-group" id="difficulty-section">
+                        <h2 class="section-label" data-i18n="ai-difficulty">Độ khó AI</h2>
+                        <div class="toggle-group" id="difficulty-toggle">
+                            <button class="toggle-btn" data-difficulty="easy" id="btn-easy" data-i18n="difficulty-easy">Dễ</button>
+                            <button class="toggle-btn active" data-difficulty="medium" id="btn-medium" data-i18n="difficulty-medium">Trung bình</button>
+                            <button class="toggle-btn" data-difficulty="hard" id="btn-hard" data-i18n="difficulty-hard">Khó</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="start-btn" id="start-btn">
+                    <span class="start-btn-text" data-i18n="start-btn">BẮT ĐẦU CHƠI</span>
+                    <span class="start-btn-icon">→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== GAME SCREEN (Tic-Tac-Toe / Caro) ===== -->
+        <div id="game-screen" class="screen">
+            <div class="game-container">
+                <div class="game-header">
+                    <button class="header-btn" id="back-btn">
+                        <span>←</span> <span data-i18n="back-menu">Menu</span>
+                    </button>
+                    <div class="game-info">
+                        <div id="game-mode-label" class="mode-label">Classic 3×3</div>
+                        <div id="game-status" class="game-status">Lượt của X</div>
+                    </div>
+                    <button class="header-btn" id="restart-btn">
+                        <span data-i18n="restart-btn">Chơi lại</span> <span>↻</span>
+                    </button>
+                </div>
+
+                <div class="players-bar">
+                    <div class="player-card active" id="player-x-card">
+                        <div class="player-symbol x-symbol">✕</div>
+                        <div class="player-name" id="player-x-name">Người chơi 1</div>
+                        <div class="player-score" id="score-x">0</div>
+                    </div>
+                    <div class="vs-divider">
+                        <span class="vs-text">VS</span>
+                        <div class="score-draw"><span data-i18n="score-draw-label">Hòa</span>: <span id="score-draw">0</span></div>
+                    </div>
+                    <div class="player-card" id="player-o-card">
+                        <div class="player-symbol o-symbol">○</div>
+                        <div class="player-name" id="player-o-name">Máy tính</div>
+                        <div class="player-score" id="score-o">0</div>
+                    </div>
+                </div>
+
+                <div id="board-wrapper">
+                    <!-- DOM board for 3x3 -->
+                    <div id="board-container" class="board-container">
+                        <div id="board" class="board"></div>
+                    </div>
+                    <!-- Canvas board for 100x100 -->
+                    <div id="canvas-container" class="canvas-container" style="display:none;">
+                        <canvas id="canvas-board"></canvas>
+                    </div>
+                </div>
+
+                <div id="move-counter" class="move-counter"><span data-i18n="move-counter">Nước đi</span>: <span id="move-count">0</span></div>
+            </div>
+        </div>
+
+        <!-- ===== BATTLESHIP SCREEN ===== -->
+        <div id="battleship-screen" class="screen">
+            <div class="bs-container">
+                <!-- Battleship Header -->
+                <div class="game-header">
+                    <button class="header-btn" id="bs-back-btn">
+                        <span>←</span> <span data-i18n="back-menu">Menu</span>
+                    </button>
+                    <div class="game-info">
+                        <div class="mode-label">Battleship</div>
+                        <div id="bs-status" class="game-status">Đặt tàu của bạn</div>
+                    </div>
+                    <button class="header-btn" id="bs-restart-btn">
+                        <span data-i18n="restart-btn">Chơi lại</span> <span>↻</span>
+                    </button>
+                </div>
+
+                <!-- Battleship Players Bar -->
+                <div class="players-bar">
+                    <div class="player-card active" id="bs-player1-card">
+                        <div class="player-symbol" style="color: var(--o-color); text-shadow: 0 0 12px var(--o-glow);">⚓</div>
+                        <div class="player-name" id="bs-player1-name">Người chơi 1</div>
+                        <div class="player-score" id="bs-score-p1">0</div>
+                    </div>
+                    <div class="vs-divider">
+                        <span class="vs-text">VS</span>
+                    </div>
+                    <div class="player-card" id="bs-player2-card">
+                        <div class="player-symbol" style="color: var(--x-color); text-shadow: 0 0 12px var(--x-glow);">⚓</div>
+                        <div class="player-name" id="bs-player2-name">Máy tính</div>
+                        <div class="player-score" id="bs-score-p2">0</div>
+                    </div>
+                </div>
+
+                <!-- ===== PLACEMENT PHASE ===== -->
+                <div id="bs-placement-phase" class="bs-phase">
+                    <div class="bs-placement-layout">
+                        <div class="bs-ship-selector">
+                            <h3 class="bs-section-title" data-i18n="bs-select-ship">Chọn tàu để đặt</h3>
+                            <div class="bs-ship-list" id="bs-ship-list">
+                                <div class="bs-ship-item selected" data-ship="carrier" data-size="5">
+                                    <div class="bs-ship-info">
+                                        <span class="bs-ship-name" data-i18n="ship-carrier">Tàu sân bay</span>
+                                        <span class="bs-ship-size" data-i18n="ship-size-5">5 ô</span>
+                                    </div>
+                                    <div class="bs-ship-preview">
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-ship-item" data-ship="battleship" data-size="4">
+                                    <div class="bs-ship-info">
+                                        <span class="bs-ship-name" data-i18n="ship-battleship">Thiết giáp hạm</span>
+                                        <span class="bs-ship-size" data-i18n="ship-size-4">4 ô</span>
+                                    </div>
+                                    <div class="bs-ship-preview">
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-ship-item" data-ship="cruiser" data-size="3">
+                                    <div class="bs-ship-info">
+                                        <span class="bs-ship-name" data-i18n="ship-cruiser">Tuần dương hạm</span>
+                                        <span class="bs-ship-size" data-i18n="ship-size-3">3 ô</span>
+                                    </div>
+                                    <div class="bs-ship-preview">
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-ship-item" data-ship="submarine" data-size="3">
+                                    <div class="bs-ship-info">
+                                        <span class="bs-ship-name" data-i18n="ship-submarine">Tàu ngầm</span>
+                                        <span class="bs-ship-size" data-i18n="ship-size-3">3 ô</span>
+                                    </div>
+                                    <div class="bs-ship-preview">
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-ship-item" data-ship="destroyer" data-size="2">
+                                    <div class="bs-ship-info">
+                                        <span class="bs-ship-name" data-i18n="ship-destroyer">Khu trục hạm</span>
+                                        <span class="bs-ship-size" data-i18n="ship-size-2">2 ô</span>
+                                    </div>
+                                    <div class="bs-ship-preview">
+                                        <span class="bs-ship-block"></span>
+                                        <span class="bs-ship-block"></span>
+                                    </div>
+                                </div>
+                            </div>
+ 
+                            <div class="bs-placement-actions">
+                                <button class="bs-action-btn" id="bs-rotate-btn" title="Xoay tàu (R)">
+                                    <span>↻</span> <span data-i18n="bs-action-rotate">Xoay</span>
+                                </button>
+                                <button class="bs-action-btn" id="bs-random-btn" title="Đặt ngẫu nhiên">
+                                    <span>🎲</span> <span data-i18n="bs-action-random">Ngẫu nhiên</span>
+                                </button>
+                                <button class="bs-action-btn" id="bs-clear-btn" title="Xóa tất cả">
+                                    <span>🗑️</span> <span data-i18n="bs-action-clear">Xóa</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Placement Board -->
+                        <div class="bs-board-wrapper">
+                            <h3 class="bs-section-title" data-i18n="bs-your-fleet">Hạm đội của bạn</h3>
+                            <div class="bs-board-area">
+                                <!-- Column Labels A-J -->
+                                <div class="bs-board-labels-top">
+                                    <div class="bs-label-corner"></div>
+                                    <div class="bs-col-label">A</div>
+                                    <div class="bs-col-label">B</div>
+                                    <div class="bs-col-label">C</div>
+                                    <div class="bs-col-label">D</div>
+                                    <div class="bs-col-label">E</div>
+                                    <div class="bs-col-label">F</div>
+                                    <div class="bs-col-label">G</div>
+                                    <div class="bs-col-label">H</div>
+                                    <div class="bs-col-label">I</div>
+                                    <div class="bs-col-label">J</div>
+                                </div>
+                                <div class="bs-board-with-rows">
+                                    <!-- Row Labels 1-10 -->
+                                    <div class="bs-row-labels">
+                                        <div class="bs-row-label">1</div>
+                                        <div class="bs-row-label">2</div>
+                                        <div class="bs-row-label">3</div>
+                                        <div class="bs-row-label">4</div>
+                                        <div class="bs-row-label">5</div>
+                                        <div class="bs-row-label">6</div>
+                                        <div class="bs-row-label">7</div>
+                                        <div class="bs-row-label">8</div>
+                                        <div class="bs-row-label">9</div>
+                                        <div class="bs-row-label">10</div>
+                                    </div>
+                                    <!-- 10×10 Board -->
+                                    <div class="bs-board" id="bs-placement-board">
+                                        <!-- 100 cells generated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="start-btn bs-start-battle-btn" id="bs-start-battle-btn" disabled>
+                        <span class="start-btn-text" data-i18n="bs-start-battle">BẮT ĐẦU TRẬN CHIẾN</span>
+                        <span class="start-btn-icon">⚔️</span>
+                    </button>
+                </div>
+
+                <!-- ===== BATTLE PHASE ===== -->
+                <div id="bs-battle-phase" class="bs-phase" style="display:none;">
+                    <div class="bs-battle-layout">
+                        <!-- Your Fleet Board -->
+                        <div class="bs-battle-section">
+                            <h3 class="bs-section-title" data-i18n="bs-your-fleet">Hạm đội của bạn</h3>
+                            <div class="bs-board-area">
+                                <div class="bs-board-labels-top">
+                                    <div class="bs-label-corner"></div>
+                                    <div class="bs-col-label">A</div>
+                                    <div class="bs-col-label">B</div>
+                                    <div class="bs-col-label">C</div>
+                                    <div class="bs-col-label">D</div>
+                                    <div class="bs-col-label">E</div>
+                                    <div class="bs-col-label">F</div>
+                                    <div class="bs-col-label">G</div>
+                                    <div class="bs-col-label">H</div>
+                                    <div class="bs-col-label">I</div>
+                                    <div class="bs-col-label">J</div>
+                                </div>
+                                <div class="bs-board-with-rows">
+                                    <div class="bs-row-labels">
+                                        <div class="bs-row-label">1</div>
+                                        <div class="bs-row-label">2</div>
+                                        <div class="bs-row-label">3</div>
+                                        <div class="bs-row-label">4</div>
+                                        <div class="bs-row-label">5</div>
+                                        <div class="bs-row-label">6</div>
+                                        <div class="bs-row-label">7</div>
+                                        <div class="bs-row-label">8</div>
+                                        <div class="bs-row-label">9</div>
+                                        <div class="bs-row-label">10</div>
+                                    </div>
+                                    <div class="bs-board bs-board-own" id="bs-own-board">
+                                        <!-- 100 cells generated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Fleet Status -->
+                            <div class="bs-fleet-status" id="bs-own-fleet-status">
+                                <div class="bs-fleet-ship" data-ship="carrier">
+                                    <span class="bs-fleet-ship-name">Tàu sân bay</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-fleet-ship" data-ship="battleship">
+                                    <span class="bs-fleet-ship-name">Thiết giáp hạm</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-fleet-ship" data-ship="cruiser">
+                                    <span class="bs-fleet-ship-name">Tuần dương hạm</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-fleet-ship" data-ship="submarine">
+                                    <span class="bs-fleet-ship-name">Tàu ngầm</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-fleet-ship" data-ship="destroyer">
+                                    <span class="bs-fleet-ship-name">Khu trục hạm</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Enemy Waters Board -->
+                        <div class="bs-battle-section">
+                            <h3 class="bs-section-title bs-title-enemy" data-i18n="bs-enemy-fleet">Vùng biển địch</h3>
+                            <div class="bs-board-area">
+                                <div class="bs-board-labels-top">
+                                    <div class="bs-label-corner"></div>
+                                    <div class="bs-col-label">A</div>
+                                    <div class="bs-col-label">B</div>
+                                    <div class="bs-col-label">C</div>
+                                    <div class="bs-col-label">D</div>
+                                    <div class="bs-col-label">E</div>
+                                    <div class="bs-col-label">F</div>
+                                    <div class="bs-col-label">G</div>
+                                    <div class="bs-col-label">H</div>
+                                    <div class="bs-col-label">I</div>
+                                    <div class="bs-col-label">J</div>
+                                </div>
+                                <div class="bs-board-with-rows">
+                                    <div class="bs-row-labels">
+                                        <div class="bs-row-label">1</div>
+                                        <div class="bs-row-label">2</div>
+                                        <div class="bs-row-label">3</div>
+                                        <div class="bs-row-label">4</div>
+                                        <div class="bs-row-label">5</div>
+                                        <div class="bs-row-label">6</div>
+                                        <div class="bs-row-label">7</div>
+                                        <div class="bs-row-label">8</div>
+                                        <div class="bs-row-label">9</div>
+                                        <div class="bs-row-label">10</div>
+                                    </div>
+                                    <div class="bs-board bs-board-enemy" id="bs-enemy-board">
+                                        <!-- 100 cells generated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Enemy Fleet Status -->
+                            <div class="bs-fleet-status" id="bs-enemy-fleet-status">
+                                <div class="bs-fleet-ship" data-ship="carrier">
+                                    <span class="bs-fleet-ship-name" data-i18n="ship-carrier">Tàu sân bay</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-fleet-ship" data-ship="battleship">
+                                    <span class="bs-fleet-ship-name" data-i18n="ship-battleship">Thiết giáp hạm</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-fleet-ship" data-ship="cruiser">
+                                    <span class="bs-fleet-ship-name" data-i18n="ship-cruiser">Tuần dương hạm</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-fleet-ship" data-ship="submarine">
+                                    <span class="bs-fleet-ship-name" data-i18n="ship-submarine">Tàu ngầm</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                                <div class="bs-fleet-ship" data-ship="destroyer">
+                                    <span class="bs-fleet-ship-name" data-i18n="ship-destroyer">Khu trục hạm</span>
+                                    <div class="bs-fleet-ship-hp">
+                                        <span class="bs-hp-dot"></span>
+                                        <span class="bs-hp-dot"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== GAME OVER OVERLAY ===== -->
+        <div id="game-over-overlay" class="overlay" style="display:none;">
+            <div class="overlay-content">
+                <div id="confetti-canvas-wrap">
+                    <canvas id="confetti-canvas"></canvas>
+                </div>
+                <div class="result-icon" id="result-icon">🏆</div>
+                <h2 id="result-text" class="result-text">X Thắng!</h2>
+                <p id="result-sub" class="result-sub">Chúc mừng người chơi!</p>
+                <div class="overlay-buttons">
+                    <button class="overlay-btn primary" id="play-again-btn" data-i18n="play-again">Chơi lại</button>
+                    <button class="overlay-btn secondary" id="menu-btn" data-i18n="menu-btn">Về menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SWITCH PLAYER OVERLAY (2P Battleship) ===== -->
+        <div id="switch-player-overlay" class="overlay" style="display:none;">
+            <div class="overlay-content">
+                <div class="result-icon" id="switch-icon">🔄</div>
+                <h2 class="result-text" id="switch-title">Đổi lượt</h2>
+                <p class="result-sub" id="switch-message">Hãy đưa máy cho người chơi tiếp theo</p>
+                <div class="overlay-buttons">
+                    <button class="overlay-btn primary" id="switch-ready-btn" data-i18n="switch-ready">Sẵn sàng</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ONLINE LOBBY SCREEN ===== -->
+        <div id="online-lobby-screen" class="screen">
+            <div class="lobby-container">
+                <div class="game-header">
+                    <button class="header-btn" id="lobby-back-btn">
+                        <span>←</span> <span data-i18n="back-menu">Menu</span>
+                    </button>
+                    <div class="game-info">
+                        <div class="mode-label" data-i18n="online-lobby">PHÒNG CHỜ ONLINE</div>
+                        <div class="game-status" id="lobby-status" data-i18n="lobby-status-init">Kết nối mạng hàng hải P2P</div>
+                    </div>
+                    <div style="width: 70px;"></div> <!-- placeholder to center title -->
+                </div>
+                
+                <div class="lobby-card">
+                    <div class="lobby-section">
+                        <h3 data-i18n="create-room-title">TẠO PHÒNG MỚI</h3>
+                        <p class="lobby-desc" data-i18n="create-room-desc">Tạo phòng và gửi link cho bạn bè để cùng chơi.</p>
+                        <button class="lobby-btn primary" id="btn-create-room">
+                            <span class="lobby-btn-icon">➕</span>
+                            <span data-i18n="create-room-btn">Tạo Phòng Chơi</span>
+                        </button>
+                        <div id="room-info-area" style="display: none;">
+                            <div class="room-id-display">
+                                <span data-i18n="room-id-label">Mã phòng:</span>
+                                <span id="display-room-id" class="glow-text">------</span>
+                                <button class="copy-btn" id="btn-copy-room" title="Copy link">📋</button>
+                            </div>
+                            <p class="lobby-hint" id="lobby-link-hint" data-i18n="room-link-hint">Đang đợi đối thủ kết nối...</p>
+                            <div class="lobby-loader">
+                                <div class="thinking-dots"><span></span><span></span><span></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="lobby-divider">
+                        <span data-i18n="lobby-or">HOẶC</span>
+                    </div>
+                    
+                    <div class="lobby-section">
+                        <h3 data-i18n="join-room-title">THAM GIA PHÒNG</h3>
+                        <p class="lobby-desc" data-i18n="join-room-desc">Nhập mã phòng của bạn bè để tham gia.</p>
+                        <div class="join-input-group">
+                            <input type="text" id="input-room-id" class="room-input" placeholder="Mã phòng (e.g. 123456)" data-i18n-placeholder="room-input-placeholder" maxlength="20">
+                            <button class="lobby-btn secondary" id="btn-join-room">
+                                <span class="lobby-btn-icon">⚡</span>
+                                <span data-i18n="join-room-btn">Vào Phòng</span>
+                            </button>
+                        </div>
+                        <p class="error-msg" id="lobby-error-msg" style="display: none;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Thinking Indicator -->
+    <div id="ai-thinking" class="ai-thinking" style="display:none;">
+        <div class="thinking-dots">
+            <span></span><span></span><span></span>
+        </div>
+        <span data-i18n="ai-thinking-text">AI đang suy nghĩ...</span>
+    </div>
+ 
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
