@@ -1001,6 +1001,8 @@ class App {
         this.bsOpponentName = document.getElementById('bs-player2-name');
         this.bsPlayerCard = document.getElementById('bs-player1-card');
         this.bsOpponentCard = document.getElementById('bs-player2-card');
+        this.bsP1ReadyBadge = document.getElementById('bs-p1-ready-badge');
+        this.bsP2ReadyBadge = document.getElementById('bs-p2-ready-badge');
         
         // Switch overlay
         this.switchOverlay = document.getElementById('switch-player-overlay');
@@ -1585,17 +1587,21 @@ class App {
         } else {
             const myName = this.myCustomName || (this.lang === 'vi' ? 'Bạn' : 'You');
             const oppName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
-            if (this.isHost) {
-                this.bsPlayerName.textContent = myName;
-                this.bsOpponentName.textContent = oppName;
-            } else {
-                this.bsPlayerName.textContent = oppName;
-                this.bsOpponentName.textContent = myName;
-            }
+            this.bsPlayerName.textContent = myName;
+            this.bsOpponentName.textContent = oppName;
         }
         
         this.bsScorePlayer.textContent = this.bsScores.player;
         this.bsScoreOpponent.textContent = this.bsScores.opponent;
+
+        // Reset and setup ready badges
+        if (this.playerMode === 3) {
+            this.bsP1ReadyBadge.style.display = 'block';
+            this.bsP2ReadyBadge.style.display = 'block';
+        } else {
+            if (this.bsP1ReadyBadge) this.bsP1ReadyBadge.style.display = 'none';
+            if (this.bsP2ReadyBadge) this.bsP2ReadyBadge.style.display = 'none';
+        }
 
         this.bsPlacementPhase.style.display = 'block';
         this.bsBattlePhase.style.display = 'none';
@@ -1605,6 +1611,10 @@ class App {
         this.meBsReady = false;
         this.opponentBsBoard = null;
         this.opponentBsShips = null;
+        
+        if (this.playerMode === 3) {
+            this._updateReadyBadgesOnline();
+        }
         
         this.bsGameStatus.className = 'game-status';
 
@@ -1883,8 +1893,57 @@ class App {
                     this.bsGameStatus.textContent = this._getT('bs-place-status-p2');
                 } else {
                     this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
-                    this.bsGameStatus.textContent = this._getT('bs-place-status');
                 }
+            }
+        }
+        if (this.playerMode === 3) {
+            this._updateReadyBadgesOnline();
+        }
+    }
+
+    _updateReadyBadgesOnline() {
+        if (!this.bsP1ReadyBadge || !this.bsP2ReadyBadge) return;
+
+        const isFullyPlaced = this.bsEngine && this.bsEngine.playerShips && this.bsEngine.playerShips.length === SHIP_TYPES.length;
+
+        if (this.isHost) {
+            // P1 is Host (Self)
+            if (isFullyPlaced) {
+                this.bsP1ReadyBadge.textContent = this.lang === 'vi' ? 'Đã xếp xong' : 'Placed';
+                this.bsP1ReadyBadge.className = 'ready-badge ready';
+            } else {
+                this.bsP1ReadyBadge.textContent = this.lang === 'vi' ? 'Đang xếp...' : 'Placing...';
+                this.bsP1ReadyBadge.className = 'ready-badge preparing';
+            }
+
+            // P2 is Guest (Opponent)
+            if (this.opponentBsReady) {
+                this.bsP2ReadyBadge.textContent = this.lang === 'vi' ? 'Sẵn sàng' : 'Ready';
+                this.bsP2ReadyBadge.className = 'ready-badge ready';
+            } else {
+                this.bsP2ReadyBadge.textContent = this.lang === 'vi' ? 'Đang xếp...' : 'Placing...';
+                this.bsP2ReadyBadge.className = 'ready-badge preparing';
+            }
+        } else {
+            // P1 is Guest (Self)
+            if (this.meBsReady) {
+                this.bsP1ReadyBadge.textContent = this.lang === 'vi' ? 'Sẵn sàng' : 'Ready';
+                this.bsP1ReadyBadge.className = 'ready-badge ready';
+            } else if (isFullyPlaced) {
+                this.bsP1ReadyBadge.textContent = this.lang === 'vi' ? 'Đã xếp xong' : 'Placed';
+                this.bsP1ReadyBadge.className = 'ready-badge preparing';
+            } else {
+                this.bsP1ReadyBadge.textContent = this.lang === 'vi' ? 'Đang xếp...' : 'Placing...';
+                this.bsP1ReadyBadge.className = 'ready-badge preparing';
+            }
+
+            // P2 is Host (Opponent)
+            if (this.opponentBsReady) {
+                this.bsP2ReadyBadge.textContent = this.lang === 'vi' ? 'Sẵn sàng' : 'Ready';
+                this.bsP2ReadyBadge.className = 'ready-badge ready';
+            } else {
+                this.bsP2ReadyBadge.textContent = this.lang === 'vi' ? 'Đang xếp...' : 'Placing...';
+                this.bsP2ReadyBadge.className = 'ready-badge preparing';
             }
         }
     }
@@ -1892,6 +1951,9 @@ class App {
     _bsStartBattleActual() {
         this.bsEngine.phase = 'battle';
         this.bsEngine.currentTurn = 'player';
+
+        if (this.bsP1ReadyBadge) this.bsP1ReadyBadge.style.display = 'none';
+        if (this.bsP2ReadyBadge) this.bsP2ReadyBadge.style.display = 'none';
 
         this.bsPlacementPhase.style.display = 'none';
         this.bsBattlePhase.style.display = 'block';
@@ -1912,6 +1974,9 @@ class App {
         this.bsEngine.phase = 'battle';
         const myTurn = this.isHost;
         this.bsEngine.currentTurn = myTurn ? 'player' : 'opponent';
+
+        if (this.bsP1ReadyBadge) this.bsP1ReadyBadge.style.display = 'none';
+        if (this.bsP2ReadyBadge) this.bsP2ReadyBadge.style.display = 'none';
         
         this.bsPlacementPhase.style.display = 'none';
         this.bsBattlePhase.style.display = 'block';
@@ -1936,6 +2001,9 @@ class App {
     }
 
     _bsStartOnlineCountdown() {
+        if (this.playerMode === 3) {
+            this._updateReadyBadgesOnline();
+        }
         if (this.onlineCountdownOverlay) {
             this.onlineCountdownOverlay.style.display = 'flex';
         }
@@ -2230,7 +2298,7 @@ class App {
     }
 
     _bsRefreshTargetBoard() {
-        const isP1 = (this.bsEngine.currentTurn === 'player');
+        const isP1 = (this.playerMode !== 2) ? true : (this.bsEngine.currentTurn === 'player');
         const shots = isP1 ? this.bsEngine.playerShots : this.bsEngine.opponentShots;
         
         for (let r = 0; r < 10; r++) for (let c = 0; c < 10; c++) {
@@ -2244,7 +2312,7 @@ class App {
     }
 
     _bsRefreshMyBoard() {
-        const isP1 = (this.bsEngine.currentTurn === 'player');
+        const isP1 = (this.playerMode !== 2) ? true : (this.bsEngine.currentTurn === 'player');
         const board = isP1 ? this.bsEngine.playerBoard : this.bsEngine.opponentBoard;
         const shots = isP1 ? this.bsEngine.opponentShots : this.bsEngine.playerShots;
         
@@ -2260,7 +2328,7 @@ class App {
     }
 
     _bsUpdateFleetStatus() {
-        const isP1 = (this.bsEngine.currentTurn === 'player');
+        const isP1 = (this.playerMode !== 2) ? true : (this.bsEngine.currentTurn === 'player');
         
         const myShips = isP1 ? this.bsEngine.playerShips : this.bsEngine.opponentShips;
         SHIP_TYPES.forEach(st => {
@@ -2606,13 +2674,8 @@ class App {
                 if (this.mode === 'battleship' && this.bsEngine) {
                     const myName = this.myCustomName || (this.lang === 'vi' ? 'Bạn' : 'You');
                     const oppName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
-                    if (this.isHost) {
-                        this.bsPlayerName.textContent = myName;
-                        this.bsOpponentName.textContent = oppName;
-                    } else {
-                        this.bsPlayerName.textContent = oppName;
-                        this.bsOpponentName.textContent = myName;
-                    }
+                    this.bsPlayerName.textContent = myName;
+                    this.bsOpponentName.textContent = oppName;
                 }
                 break;
             case 'init-game':

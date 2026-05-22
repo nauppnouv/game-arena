@@ -1825,6 +1825,32 @@ h1, h2, h3, .game-title, .result-text {
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
+/* Battleship Player-Card Ready Badges */
+.player-card .ready-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.2rem;
+    transition: all var(--transition-fast);
+}
+.player-card .ready-badge.preparing {
+    background: rgba(234, 179, 8, 0.1);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    text-shadow: 0 0 8px rgba(234, 179, 8, 0.4);
+    box-shadow: none;
+}
+.player-card .ready-badge.ready {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.15);
+}
+
 .ready-vs {
     font-family: 'Outfit', sans-serif;
     font-size: 1.25rem;
