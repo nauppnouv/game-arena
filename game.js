@@ -124,7 +124,10 @@ const TRANSLATIONS = {
         "bs-place-status-host-waiting": "Đang đợi đối thủ sẵn sàng...",
         "bs-place-status-guest-waiting": "Đang đợi người tạo phòng bắt đầu...",
         "bs-place-status-both-ready": "Cả hai đã sẵn sàng! Nhấn bắt đầu để chiến đấu.",
-        "bs-place-status-opp-ready": "Đối thủ đã sẵn sàng! Hãy đặt hết tàu của bạn."
+        "bs-place-status-opp-ready": "Đối thủ đã sẵn sàng! Hãy đặt hết tàu của bạn.",
+        "nickname-title": "TÊN CỦA BẠN",
+        "nickname-desc": "Nhập biệt danh hiển thị trong trận đấu (tùy chọn)",
+        "nickname-placeholder": "Nhập biệt danh của bạn..."
     },
     en: {
         "page-title": "Game Arena | Caro, Tic-Tac-Toe & Battleship",
@@ -245,7 +248,10 @@ const TRANSLATIONS = {
         "bs-place-status-host-waiting": "Waiting for opponent to be ready...",
         "bs-place-status-guest-waiting": "Waiting for host to start...",
         "bs-place-status-both-ready": "Both players ready! Press start to battle.",
-        "bs-place-status-opp-ready": "Opponent is ready! Place all your ships."
+        "bs-place-status-opp-ready": "Opponent is ready! Place all your ships.",
+        "nickname-title": "YOUR NICKNAME",
+        "nickname-desc": "Enter a nickname for the match (optional)",
+        "nickname-placeholder": "Enter your nickname..."
     }
 };
 
@@ -922,6 +928,8 @@ class App {
         this.mySymbol = null;
         this.opponentBsReady = false;
         this.meBsReady = false;
+        this.myCustomName = '';
+        this.opponentCustomName = '';
         this.opponentBsBoard = null;
         this.opponentBsShips = null;
         this.rematchRequested = false;
@@ -1008,6 +1016,7 @@ class App {
         this.btnCopyRoom = document.getElementById('btn-copy-room');
         this.lobbyLinkHint = document.getElementById('lobby-link-hint');
         this.inputRoomId = document.getElementById('input-room-id');
+        this.inputNickname = document.getElementById('input-nickname');
         this.btnJoinRoom = document.getElementById('btn-join-room');
         this.lobbyErrorMsg = document.getElementById('lobby-error-msg');
         this.lobbyBackBtn = document.getElementById('lobby-back-btn');
@@ -1152,7 +1161,10 @@ class App {
                 this._bsUpdatePlacementStatusAndButtons();
             } else if (this.bsEngine.phase === 'battle') {
                 if (this.playerMode === 3) {
-                    this.bsGameStatus.textContent = this.bsEngine.currentTurn === 'player' ? this._getT('bs-battle-turn-you') : this._getT('bs-battle-turn-opp');
+                    const oppDisplayName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
+                    this.bsGameStatus.textContent = this.bsEngine.currentTurn === 'player' 
+                        ? this._getT('bs-battle-turn-you') 
+                        : (this.lang === 'vi' ? `Lượt của ${oppDisplayName}...` : `${oppDisplayName}'s turn...`);
                 } else if (this.playerMode === 2) {
                     this.bsGameStatus.textContent = this.bsEngine.currentTurn === 'player' ? this._getT('bs-battle-turn-p1') : this._getT('bs-battle-turn-p2');
                 } else {
@@ -1236,12 +1248,14 @@ class App {
             this.playerXName.textContent = this.lang === 'vi' ? 'Người chơi 1' : 'Player 1';
             this.playerOName.textContent = this.lang === 'vi' ? 'Người chơi 2' : 'Player 2';
         } else {
+            const myName = this.myCustomName || (this.lang === 'vi' ? 'Bạn' : 'You');
+            const oppName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
             if (this.mySymbol === PLAYER_X) {
-                this.playerXName.textContent = this.lang === 'vi' ? 'Bạn' : 'You';
-                this.playerOName.textContent = this.lang === 'vi' ? 'Đối thủ' : 'Opponent';
+                this.playerXName.textContent = myName;
+                this.playerOName.textContent = oppName;
             } else {
-                this.playerXName.textContent = this.lang === 'vi' ? 'Đối thủ' : 'Opponent';
-                this.playerOName.textContent = this.lang === 'vi' ? 'Bạn' : 'You';
+                this.playerXName.textContent = oppName;
+                this.playerOName.textContent = myName;
             }
         }
     }
@@ -1373,13 +1387,16 @@ class App {
         if (this.engine.gameOver) {
             const name = this.engine.winner ? this._getName(this.engine.winner) : '';
             this.gameStatus.textContent = this.engine.winner 
-                ? (this.playerMode === 3 ? (this.engine.winner === this.mySymbol ? this._getT('win-you') : this._getT('win-opponent')) : `${name} Thắng! 🎉`) 
+                ? (this.playerMode === 3 
+                    ? `${name} ${this.lang === 'vi' ? 'Thắng!' : 'Won!'} ${this.engine.winner === this.mySymbol ? '🎉' : '💀'}`
+                    : `${name} Thắng! 🎉`) 
                 : this._getT('draw-msg');
             this.gameStatus.className = 'game-status' + (this.engine.winner === PLAYER_X ? ' x-turn' : this.engine.winner === PLAYER_O ? ' o-turn' : '');
         } else {
             let turnText = '';
             if (this.playerMode === 3) {
-                turnText = this.engine.currentPlayer === this.mySymbol ? this._getT('turn-you') : this._getT('turn-opponent');
+                const name = this._getName(this.engine.currentPlayer);
+                turnText = this.lang === 'vi' ? `Lượt của ${name}` : `${name}'s Turn`;
             } else if (this.playerMode === 1) {
                 turnText = this.engine.currentPlayer === this.humanPlayer ? this._getT('turn-you') : this._getT('turn-ai');
             } else {
@@ -1397,7 +1414,9 @@ class App {
     _getName(player) {
         if (this.playerMode === 1) return player === this.humanPlayer ? (this.lang === 'vi' ? 'Bạn' : 'You') : 'AI';
         if (this.playerMode === 2) return player === PLAYER_X ? (this.lang === 'vi' ? 'Người chơi 1' : 'Player 1') : (this.lang === 'vi' ? 'Người chơi 2' : 'Player 2');
-        return player === this.mySymbol ? (this.lang === 'vi' ? 'Bạn' : 'You') : (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
+        const myName = this.myCustomName || (this.lang === 'vi' ? 'Bạn' : 'You');
+        const oppName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
+        return player === this.mySymbol ? myName : oppName;
     }
 
     _handleGameOver() {
@@ -1466,9 +1485,11 @@ class App {
         this.resultIcon.textContent = playerWon ? '🏆' : '💀';
         
         if (this.playerMode === 3) {
+            const myName = this.myCustomName || (this.lang === 'vi' ? 'Bạn' : 'You');
+            const oppName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
             this.resultText.textContent = playerWon 
-                ? (this.lang === 'vi' ? 'Bạn Thắng!' : 'You Win!') 
-                : (this.lang === 'vi' ? 'Đối thủ Thắng!' : 'Opponent Wins!');
+                ? (this.lang === 'vi' ? `${myName} Thắng!` : `${myName} Wins!`) 
+                : (this.lang === 'vi' ? `${oppName} Thắng!` : `${oppName} Wins!`);
             this.resultText.className = 'result-text ' + (playerWon ? 'x-win' : 'o-win');
             
             if (this.rematchRequested) {
@@ -1562,12 +1583,14 @@ class App {
             this.bsPlayerName.textContent = this.lang === 'vi' ? 'Người chơi 1' : 'Player 1';
             this.bsOpponentName.textContent = this.lang === 'vi' ? 'Người chơi 2' : 'Player 2';
         } else {
+            const myName = this.myCustomName || (this.lang === 'vi' ? 'Bạn' : 'You');
+            const oppName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
             if (this.isHost) {
-                this.bsPlayerName.textContent = this.lang === 'vi' ? 'Bạn' : 'You';
-                this.bsOpponentName.textContent = this.lang === 'vi' ? 'Đối thủ' : 'Opponent';
+                this.bsPlayerName.textContent = myName;
+                this.bsOpponentName.textContent = oppName;
             } else {
-                this.bsPlayerName.textContent = this.lang === 'vi' ? 'Đối thủ' : 'Opponent';
-                this.bsOpponentName.textContent = this.lang === 'vi' ? 'Bạn' : 'You';
+                this.bsPlayerName.textContent = oppName;
+                this.bsOpponentName.textContent = myName;
             }
         }
         
@@ -1798,6 +1821,9 @@ class App {
         const isFullyPlaced = activeShips.length === SHIP_TYPES.length;
 
         if (this.playerMode === 3) {
+            const oppDisplayName = this.opponentCustomName || (this.lang === 'vi' ? 'đối thủ' : 'opponent');
+            const oppDisplayNameCapitalized = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
+
             if (this.isHost) {
                 this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-start');
                 const readyToStart = isFullyPlaced && this.opponentBsReady;
@@ -1807,11 +1833,15 @@ class App {
                     if (this.opponentBsReady) {
                         this.bsGameStatus.textContent = this._getT('bs-place-status-both-ready');
                     } else {
-                        this.bsGameStatus.textContent = this._getT('bs-place-status-host-waiting');
+                        this.bsGameStatus.textContent = this.lang === 'vi' 
+                            ? `Đang đợi ${oppDisplayName} sẵn sàng...` 
+                            : `Waiting for ${oppDisplayName} to be ready...`;
                     }
                 } else {
                     if (this.opponentBsReady) {
-                        this.bsGameStatus.textContent = this._getT('bs-place-status-opp-ready');
+                        this.bsGameStatus.textContent = this.lang === 'vi'
+                            ? `${oppDisplayNameCapitalized} đã sẵn sàng! Hãy đặt hết tàu của bạn.`
+                            : `${oppDisplayNameCapitalized} is ready! Place all your ships.`;
                     } else {
                         this.bsGameStatus.textContent = this._getT('bs-place-status');
                     }
@@ -1820,7 +1850,9 @@ class App {
                 if (this.meBsReady) {
                     this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-waiting');
                     this.bsStartBattle.disabled = true;
-                    this.bsGameStatus.textContent = this._getT('bs-place-status-guest-waiting');
+                    this.bsGameStatus.textContent = this.lang === 'vi'
+                        ? `Đang đợi ${oppDisplayName} bắt đầu...`
+                        : `Waiting for ${oppDisplayName} to start...`;
                 } else {
                     this.bsStartBattle.querySelector('.start-btn-text').textContent = this._getT('bs-ready-btn-ready');
                     this.bsStartBattle.disabled = !isFullyPlaced;
@@ -1891,7 +1923,8 @@ class App {
             this.bsGameStatus.textContent = this._getT('bs-battle-turn-you');
             this.bsGameStatus.className = 'game-status x-turn';
         } else {
-            this.bsGameStatus.textContent = this._getT('bs-battle-turn-opp');
+            const oppDisplayName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
+            this.bsGameStatus.textContent = this.lang === 'vi' ? `Lượt của ${oppDisplayName}...` : `${oppDisplayName}'s turn...`;
             this.bsGameStatus.className = 'game-status o-turn';
         }
         
@@ -2008,7 +2041,8 @@ class App {
             this.bsEngine.currentTurn = 'opponent';
             this.bsPlayerCard.classList.remove('active');
             this.bsOpponentCard.classList.add('active');
-            this.bsGameStatus.textContent = this._getT('bs-battle-turn-opp');
+            const oppDisplayName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
+            this.bsGameStatus.textContent = this.lang === 'vi' ? `Lượt của ${oppDisplayName}...` : `${oppDisplayName}'s turn...`;
             this.bsGameStatus.className = 'game-status o-turn';
             
         } else if (this.playerMode === 1) {
@@ -2119,12 +2153,22 @@ class App {
     _showShotResultText(result, name) {
         if (this.playerMode === 3) {
             const isMe = name === 'Bạn' || name === 'You';
+            const displayName = isMe 
+                ? (this.myCustomName || (this.lang === 'vi' ? 'Bạn' : 'You'))
+                : (this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent'));
+            
             if (result === 'sunk') {
-                this.bsGameStatus.textContent = isMe ? this._getT('bs-sunk-you') : this._getT('bs-sunk-peer');
+                this.bsGameStatus.textContent = isMe 
+                    ? (this.lang === 'vi' ? '💥 Bạn đã đánh chìm tàu đối phương!' : '💥 You sunk an enemy ship!')
+                    : (this.lang === 'vi' ? `💀 ${displayName} đã đánh chìm tàu của bạn!` : `💀 ${displayName} sunk your ship!`);
             } else if (result === 'hit') {
-                this.bsGameStatus.textContent = isMe ? this._getT('bs-hit-you') : this._getT('bs-hit-peer');
+                this.bsGameStatus.textContent = isMe 
+                    ? this._getT('bs-hit-you') 
+                    : (this.lang === 'vi' ? `💥 ${displayName} bắn trúng tàu bạn!` : `💥 ${displayName} hit your ship!`);
             } else {
-                this.bsGameStatus.textContent = isMe ? this._getT('bs-miss-you') : this._getT('bs-miss-peer');
+                this.bsGameStatus.textContent = isMe 
+                    ? this._getT('bs-miss-you') 
+                    : (this.lang === 'vi' ? `💨 ${displayName} bắn trượt!` : `💨 ${displayName} Missed!`);
             }
         } else {
             if (result === 'sunk') {
@@ -2278,6 +2322,12 @@ class App {
     onlineCreateRoom() {
         if (this.peer) return;
         
+        if (this.inputNickname && this.inputNickname.value.trim()) {
+            this.myCustomName = this.inputNickname.value.trim();
+        } else {
+            this.myCustomName = '';
+        }
+        
         this.btnCreateRoom.disabled = true;
         this.btnJoinRoom.disabled = true;
         this.lobbyStatus.textContent = this.lang === 'vi' ? 'Đang khởi tạo phòng chờ...' : 'Initializing lobby...';
@@ -2323,6 +2373,12 @@ class App {
 
     onlineJoinRoom(autoCode = null) {
         if (this.peer) return;
+        
+        if (this.inputNickname && this.inputNickname.value.trim()) {
+            this.myCustomName = this.inputNickname.value.trim();
+        } else {
+            this.myCustomName = '';
+        }
         
         const codeInputVal = autoCode || this.inputRoomId.value.trim();
         if (!codeInputVal) {
@@ -2382,6 +2438,11 @@ class App {
             this.meReady = false;
             this.opponentReady = false;
             
+            this.conn.send({
+                type: 'name-handshake',
+                name: this.myCustomName
+            });
+
             if (this.mode === 'battleship') {
                 this.onlineStartGameActual();
             } else {
@@ -2424,6 +2485,9 @@ class App {
         this.isHost = false;
         this.opponentBsReady = false;
         this.meBsReady = false;
+        this.myCustomName = '';
+        this.opponentCustomName = '';
+        if (this.inputNickname) this.inputNickname.value = '';
         this.opponentBsBoard = null;
         this.opponentBsShips = null;
         this.rematchRequested = false;
@@ -2536,6 +2600,21 @@ class App {
         if (!data || !data.type) return;
         
         switch (data.type) {
+            case 'name-handshake':
+                this.opponentCustomName = data.name;
+                this._updatePlayerNames();
+                if (this.mode === 'battleship' && this.bsEngine) {
+                    const myName = this.myCustomName || (this.lang === 'vi' ? 'Bạn' : 'You');
+                    const oppName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
+                    if (this.isHost) {
+                        this.bsPlayerName.textContent = myName;
+                        this.bsOpponentName.textContent = oppName;
+                    } else {
+                        this.bsPlayerName.textContent = oppName;
+                        this.bsOpponentName.textContent = myName;
+                    }
+                }
+                break;
             case 'init-game':
                 this.mode = data.mode;
                 this.difficulty = data.difficulty;
@@ -2603,7 +2682,8 @@ class App {
                         this.bsEngine.phase = 'gameover';
                         this.bsScores.opponent++;
                         this.bsScoreOpponent.textContent = this.bsScores.opponent;
-                        this.bsGameStatus.textContent = this.lang === 'vi' ? '💀 Đối thủ đã thắng!' : '💀 Opponent Wins!';
+                        const oppDisplayName = this.opponentCustomName || (this.lang === 'vi' ? 'Đối thủ' : 'Opponent');
+                        this.bsGameStatus.textContent = this.lang === 'vi' ? `💀 ${oppDisplayName} đã thắng!` : `💀 ${oppDisplayName} Wins!`;
                         setTimeout(() => this._showBSGameOver(false), 800);
                         return;
                     }
